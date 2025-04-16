@@ -1,0 +1,262 @@
+﻿@page "/"
+@using System.Collections.Concurrent
+@using System.Diagnostics
+@inject SpotlightRepository repository
+@inject IJSRuntime JsRuntime
+@implements IDisposable
+<div class="container">
+    <h1>Spotlight meter</h1>
+    <div class="row">
+        <h2>Компании</h2>
+        <div class="col">
+            <button class="btn btn-primary"
+                @onclick="@(() => AddCompanyAsync())"
+                type="button">
+                +
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <select @onchange="@(args => ChangeCompany(SelectCompany(args)))">
+                @foreach (var item in companies)
+                {
+                    <option value="@item.Id">@item.Title</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <h2>Герои</h2>
+        <div class="col">
+            <button class="btn btn-primary"
+                @onclick="@(() => AddTargetAsync())"
+                type="button">
+                +
+            </button>
+            <button class="btn btn-primary"
+                @onclick="@(() => ResetTargetsAsync())"
+                type="button">
+                reset
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        @foreach (var target in targets.Values.OrderBy(x => x.Name))
+        {
+            <div class="col-lg-4 time-block">
+                <button class="btn btn-primary"
+                    @onclick="@(() => ToggleSpotlight(target))"
+                    style="background: @(target.Active ? "red" : "gray"); color: @(target.Active ? "white" : "black"); width: 100%;"
+                    type="button">
+                    <h5>
+                        @(target.Active ? "😁" : "😞") @target.Name
+                    </h5>
+                    @{
+                        var offTime = target.TotalOffTime + (target.Active ? TimeSpan.Zero : targetsTime[target.Id]);
+                        var spotTime = target.TotalSpotlightTime + (target.Active ? targetsTime[target.Id] : TimeSpan.Zero);
+                    }
+                    @if (target.Active)
+                    {
+                        <h5>Активно @spotTime.ToMinSec()</h5>
+                        <span>@offTime.ToMinSec()</span>
+                    }
+                    else
+                    {
+                        <h5>Не активно @offTime.ToMinSec()</h5>
+                        <span>@spotTime.ToMinSec()</span>
+                    }
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private Company? company;
+    private List<Company> companies = new();
+    private Dictionary<Guid, SpotlightTarget> targets = new();
+    private ConcurrentDictionary<Guid, TimeSpan> targetsTime = new();
+    private Task? processTargetTimeTask;
+    private CancellationTokenSource cancellationTokenSource = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        companies = await repository.GetCompaniesAsync()
+            .ToListAsync();
+
+        var lastCompany = await repository.GetLastCompanyAsync();
+        if (lastCompany is null)
+        {
+            await AddCompanyAsync();
+        }
+        else
+        {
+            company = lastCompany;
+            await InitTargetsAsync();
+        }
+    }
+
+    private async Task AddCompanyAsync()
+    {
+        var title = await JsRuntime.InvokeAsync<string>("prompt", "Название:");
+        await ChangeCompany(new(Guid.NewGuid(), title));
+        await InitTargetsAsync();
+    }
+
+    private async Task ToggleSpotlight(SpotlightTarget target)
+    {
+        targetsTime[target.Id] = default;
+        if (target.Active)
+        {
+            var spotlightTime = DateTime.Now - target.SpotlightPick;
+            target = target with 
+            {
+                Active = false,
+                SpotlightPick = default,
+                SpotlightRelease = DateTime.Now,
+                TotalSpotlightTime = target.TotalSpotlightTime + spotlightTime
+                };
+        }
+        else
+        {
+            var offTime = DateTime.Now - target.SpotlightRelease;
+            target = target with 
+            {
+                Active = true,
+                SpotlightPick = DateTime.Now,
+                SpotlightRelease = default,
+                TotalOffTime = target.TotalOffTime + offTime
+                };
+        }
+
+        await repository.SaveTargetAsync(target);
+        targets[target.Id] = target;
+    }
+
+    private async Task AddTargetAsync()
+    {
+        var name = await JsRuntime.InvokeAsync<string>("prompt", "Имя:");
+        var target = new SpotlightTarget(
+            Guid.NewGuid(),
+            company!.Id,
+            name,
+            false,
+            default,
+            DateTime.Now,
+            default,
+            default);
+        targetsTime[target.Id] = default;
+        targets.Add(target.Id, target);
+        await repository.SaveTargetAsync(target);
+    }
+
+    private async Task InitTargetsAsync()
+    {
+        targetsTime = new();
+        var dateTime = DateTime.Now;
+        targets = await repository
+            .GetTargetsAsync()
+            .Where(target => target.CompanyId == company!.Id)
+            .ToDictionaryAsync(target => target.Id);
+
+        foreach (var target in targets.Values.ToArray())
+        {
+            targets[target.Id] = target.Active
+                ? target with {TotalSpotlightTime = target.TotalSpotlightTime + (dateTime - target.SpotlightPick), SpotlightPick = dateTime}
+                : target with {TotalOffTime = target.TotalOffTime + (dateTime - target.SpotlightRelease), SpotlightRelease = dateTime};
+            targetsTime[target.Id] = TimeSpan.Zero;
+            await repository.SaveTargetAsync(target);
+        }
+
+        await CancelTimeTaskAsync();
+        processTargetTimeTask = ProcessTargetTime(cancellationTokenSource.Token);
+    }
+
+    private async Task CancelTimeTaskAsync()
+    {
+        cancellationTokenSource.Cancel();
+        if (processTargetTimeTask != null)
+            await processTargetTimeTask;
+        cancellationTokenSource = new();
+    }
+
+    private async Task ProcessTargetTime(CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var concurrentDictionary = targetsTime;
+                foreach (var (key, _) in concurrentDictionary.ToArray())
+                {
+                    concurrentDictionary[key] += stopwatch.Elapsed;
+                }
+                StateHasChanged();
+                stopwatch.Restart();
+                await Task.Delay(500, cancellationToken);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        stopwatch.Stop();
+    }
+
+    private async Task ResetTargetsAsync()
+    {
+        await CancelTimeTaskAsync();
+        targetsTime = new();
+        var dateTime = DateTime.Now;
+
+        foreach (var target in targets.Values.ToArray())
+        {
+            targets[target.Id] = target with{
+                Active = false,
+                SpotlightPick = default,
+                SpotlightRelease = dateTime,
+                TotalOffTime = default,
+                TotalSpotlightTime =default
+                };
+
+            targetsTime[target.Id] = TimeSpan.Zero;
+            await repository.SaveTargetAsync(target);
+        }
+
+        processTargetTimeTask = ProcessTargetTime(cancellationTokenSource.Token);
+    }
+
+    private Company SelectCompany(ChangeEventArgs eventArgs)
+    {
+        return Guid.TryParse(eventArgs.Value?.ToString(), out var id)
+            ? companies.Single(x => x.Id == id)
+            : companies.First();
+    }
+
+    private async Task ChangeCompany(Company newCompany)
+    {
+        if (company != null)
+        {
+            foreach (var target in targets.Values.Where(target => target.Active))
+            {
+                await ToggleSpotlight(target);
+            }
+        }
+        await repository.SaveLastCompany(newCompany);
+        companies = await repository.GetCompaniesAsync()
+            .ToListAsync();
+        company = newCompany;
+    }
+
+    public void Dispose()
+    {
+        if (!cancellationTokenSource.IsCancellationRequested)
+        {
+            cancellationTokenSource.Cancel();
+            processTargetTimeTask?.GetAwaiter().GetResult();
+        }
+    }
+
+}
