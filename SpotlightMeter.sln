@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotlightMeter.App", "SpotlightMeter.App\SpotlightMeter.App.csproj", "{0924C010-4B2E-4D6D-BC98-9A2907CBD992}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotlightMeter.NativeApp", "SpotlightMeter.NativeApp\SpotlightMeter.NativeApp.csproj", "{53CE1650-219D-4EF3-9F13-EA2897638A95}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotlightMeter.NativeApp.Android", "SpotlightMeter.NativeApp.Android\SpotlightMeter.NativeApp.Android.csproj", "{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotlightMeter.NativeApp.Desktop", "SpotlightMeter.NativeApp.Desktop\SpotlightMeter.NativeApp.Desktop.csproj", "{4FE9C181-5566-4993-B6C1-A11E74E0699F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotlightMeter.NativeApp.iOS", "SpotlightMeter.NativeApp.iOS\SpotlightMeter.NativeApp.iOS.csproj", "{1863CEBA-676D-4C50-83FB-9AF71506DC91}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0924C010-4B2E-4D6D-BC98-9A2907CBD992}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0924C010-4B2E-4D6D-BC98-9A2907CBD992}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0924C010-4B2E-4D6D-BC98-9A2907CBD992}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0924C010-4B2E-4D6D-BC98-9A2907CBD992}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53CE1650-219D-4EF3-9F13-EA2897638A95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53CE1650-219D-4EF3-9F13-EA2897638A95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53CE1650-219D-4EF3-9F13-EA2897638A95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53CE1650-219D-4EF3-9F13-EA2897638A95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EB2931E-9F46-434A-8B1F-93E8EFAD5BA5}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{4FE9C181-5566-4993-B6C1-A11E74E0699F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FE9C181-5566-4993-B6C1-A11E74E0699F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FE9C181-5566-4993-B6C1-A11E74E0699F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FE9C181-5566-4993-B6C1-A11E74E0699F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1863CEBA-676D-4C50-83FB-9AF71506DC91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1863CEBA-676D-4C50-83FB-9AF71506DC91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1863CEBA-676D-4C50-83FB-9AF71506DC91}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{1863CEBA-676D-4C50-83FB-9AF71506DC91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1863CEBA-676D-4C50-83FB-9AF71506DC91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1863CEBA-676D-4C50-83FB-9AF71506DC91}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7CFCBA6F-7F80-4DC3-865D-54D9876B848C}
+	EndGlobalSection
+EndGlobal
